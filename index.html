@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Language Exchange Chat Roulette</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="top-right-controls">
+    <div class="dropdown language-dropdown" tabindex="0">
+      <button class="dropdown-btn" aria-haspopup="listbox" aria-expanded="false" id="languageBtn">
+        Language: English ▾
+      </button>
+      <ul class="dropdown-menu" role="listbox" aria-labelledby="languageBtn" hidden>
+        <li role="option" tabindex="0" data-lang="en" aria-selected="true">English</li>
+        <li role="option" tabindex="0" data-lang="es">Spanish</li>
+        <li role="option" tabindex="0" data-lang="zh">Chinese</li>
+        <li role="option" tabindex="0" data-lang="ru">Russian</li>
+        <li role="option" tabindex="0" data-lang="fr">French</li>
+      </ul>
+    </div>
+    <button class="profile-btn" type="button">Profile</button>
+  </div>
+
+  <div class="app-container">
+    <header class="header-box">
+      <h1>QALA Language Exchange</h1>
+    </header>
+
+    <section class="criteria-selection">
+      <div class="criteria-tab">Preferred Language Partner</div>
+      <form>
+        <div class="form-row">
+          <label for="native-language">Native Language</label>
+          <select id="native-language" name="native-language" required>
+            <option value="" disabled selected>Select</option>
+            <option>English</option>
+            <option>Spanish</option>
+            <option>Chinese</option>
+            <option>Russian</option>
+            <option>French</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="target-language">Target Language</label>
+          <select id="target-language" name="target-language" required>
+            <option value="" disabled selected>Select</option>
+            <option>English</option>
+            <option>Spanish</option>
+            <option>Chinese</option>
+            <option>Russian</option>
+            <option>French</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="age">Age</label>
+          <select id="age" name="age">
+            <option value="" disabled selected>Select</option>
+            <option>18-24</option>
+            <option>25-34</option>
+            <option>35-44</option>
+            <option>45-54</option>
+            <option>55+</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="gender">Gender</label>
+          <select id="gender" name="gender">
+            <option value="" disabled selected>Select</option>
+            <option>Any</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="proficiency">Proficiency Level</label>
+          <select id="proficiency" name="proficiency">
+            <option value="" disabled selected>Select</option>
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+            <option>Native</option>
+          </select>
+        </div>
+      </form>
+    </section>
+
+    <main class="video-chat-container">
+      <div class="video-panels" data-layout="side-by-side">
+        <div class="video-panel user-video" style="position: relative;">
+          <video autoplay muted playsinline></video>
+          <div class="left-floating-box" id="floating-box" tabindex="0">
+            <div class="translator-header">Translator</div>
+            <textarea class="translator-textarea" placeholder="Type here..."></textarea>
+          </div>
+        </div>
+        <div class="video-panel partner-video">
+          <video autoplay playsinline></video>
+        </div>
+      </div>
+    </main>
+
+    <div class="chat-toggle-container">
+      <button id="chat-toggle-btn">Chat</button>
+      <aside class="text-chat-panel hidden">
+        <header class="chat-header">
+          <h2>Text Chat</h2>
+          <button id="close-chat-btn" aria-label="Close chat">×</button>
+        </header>
+        <div class="chat-messages" aria-live="polite"></div>
+        <form class="chat-input-form">
+          <input type="text" placeholder="Type a message..." />
+          <button type="submit">Send</button>
+        </form>
+      </aside>
+    </div>
+  </div>
+
+<script>
+  // Chat toggle logic unchanged
+  const chatToggleBtn = document.getElementById('chat-toggle-btn');
+  const chatPanel = document.querySelector('.text-chat-panel');
+  const closeChatBtn = document.getElementById('close-chat-btn');
+  chatToggleBtn.addEventListener('click', () => {
+    chatPanel.classList.toggle('hidden');
+  });
+  closeChatBtn.addEventListener('click', () => {
+    chatPanel.classList.add('hidden');
+  });
+
+  // Make floating box draggable inside its container
+  (function() {
+    const floatingBox = document.getElementById('floating-box');
+    const container = floatingBox.parentElement;
+    let isDragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    function isDraggableTarget(target) {
+      if (target.classList.contains('translator-header')) return true;
+      if (target === floatingBox) return true;
+      if (target.parentElement === floatingBox && !target.classList.contains('translator-textarea')) return true;
+      return false;
+    }
+
+    floatingBox.addEventListener('mousedown', e => {
+      if (!isDraggableTarget(e.target)) return;
+      isDragging = true;
+      const rect = floatingBox.getBoundingClientRect();
+      dragOffsetX = e.clientX - rect.left;
+      dragOffsetY = e.clientY - rect.top;
+      floatingBox.style.transition = 'none';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      floatingBox.style.transition = '';
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const containerRect = container.getBoundingClientRect();
+      let left = e.clientX - containerRect.left - dragOffsetX;
+      let top = e.clientY - containerRect.top - dragOffsetY;
+
+      const maxLeft = container.clientWidth - floatingBox.offsetWidth;
+      const maxTop = container.clientHeight - floatingBox.offsetHeight;
+      left = Math.min(Math.max(0, left), maxLeft);
+      top = Math.min(Math.max(0, top), maxTop);
+
+      floatingBox.style.left = left + 'px';
+      floatingBox.style.top = top + 'px';
+    });
+  })();
+
+  // Language dropdown toggle and selection
+  document.addEventListener('DOMContentLoaded', () => {
+    const dropdown = document.querySelector('.language-dropdown');
+    const btn = dropdown.querySelector('.dropdown-btn');
+    const menu = dropdown.querySelector('.dropdown-menu');
+    const options = Array.from(menu.querySelectorAll('li'));
+
+    btn.addEventListener('click', () => {
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      if (expanded) {
+        menu.hidden = true;
+      } else {
+        menu.hidden = false;
+        options[0].focus();
+      }
+    });
+
+    options.forEach(option => {
+      option.addEventListener('click', () => {
+        options.forEach(o => o.setAttribute('aria-selected', 'false'));
+        option.setAttribute('aria-selected', 'true');
+        btn.textContent = `Language: ${option.textContent} ▾`;
+        btn.setAttribute('aria-expanded', 'false');
+        menu.hidden = true;
+        btn.focus();
+      });
+
+      option.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          option.click();
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const next = option.nextElementSibling || options[0];
+          next.focus();
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prev = option.previousElementSibling || options[options.length - 1];
+          prev.focus();
+        }
+        if (e.key === 'Escape') {
+          btn.setAttribute('aria-expanded', 'false');
+          menu.hidden = true;
+          btn.focus();
+        }
+      });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target)) {
+        btn.setAttribute('aria-expanded', 'false');
+        menu.hidden = true;
+      }
+    });
+  });
+</script>
+</body>
+</html>
